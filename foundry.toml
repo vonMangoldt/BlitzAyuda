@@ -10,3 +10,9 @@ remappings = [
     '@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/',
     'solidity-bytes-utils/=lib/solidity-bytes-utils/',
 ]
+
+[rpc_endpoints]
+base = "wss://base-rpc.publicnode.com"
+base_sepolia = "wss://base-sepolia.drpc.org"
+zircuit = "wss://zircuit-mainnet.drpc.org"
+arbitrum = "wss://arbitrum-one-rpc.publicnode.com"
