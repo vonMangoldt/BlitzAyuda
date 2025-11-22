@@ -3,6 +3,47 @@ pragma solidity ^0.8.13;
 
 contract CallDataVerifyer {
 
+    function createTransferCallData(
+        address to,
+        uint256 amount
+    )
+        public
+        pure
+        returns (bytes memory)
+    {
+        return abi.encodeWithSelector(
+            this.transfer.selector,
+            to,
+            amount
+        );
+    }
+
+    function approve(
+        address spender,
+        uint256 amount
+    )
+        public
+        pure
+        returns (bool)
+    {
+        return true;
+    }
+
+    function createFakeTransferCallData(
+        address to,
+        uint256 amount
+    )
+        public
+        pure
+        returns (bytes memory)
+    {
+        return abi.encodeWithSelector(
+            this.approve.selector,
+            to,
+            amount
+        );
+    }
+
     function transfer(
         address to,
         uint256 amount
@@ -24,6 +65,7 @@ contract CallDataVerifyer {
         bytes4 selectorTransfer = this.transfer.selector;
 
         bytes4 newSelector = _checkSelector(callData);
+
         if (newSelector == selectorTransfer) {
             return true;
         }
