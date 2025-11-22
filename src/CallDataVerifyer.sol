@@ -25,7 +25,21 @@ contract CallDataVerifyer {
 
         bytes4 newSelector = _checkSelector(callData);
         if (newSelector == selectorTransfer) {
-        return true;
+            return true;
+        }
+        return false;
+    }
+
+    function hashBytes4(
+        bytes4 selector
+    )
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(
+            abi.encodePacked(selector)
+        );
     }
 
     function _checkSelector(
