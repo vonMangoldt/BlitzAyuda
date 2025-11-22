@@ -21,6 +21,10 @@ contract CallDataVerifyer {
         pure
         returns (bool)
     {
+        bytes4 selectorTransfer = this.transfer.selector;
+
+        bytes4 newSelector = _checkSelector(callData);
+        if (newSelector == selectorTransfer) {
         return true;
     }
 
