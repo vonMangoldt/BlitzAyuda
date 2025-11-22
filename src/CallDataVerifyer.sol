@@ -2,6 +2,18 @@
 pragma solidity ^0.8.13;
 
 contract CallDataVerifyer {
+
+    function transfer(
+        address to,
+        uint256 amount
+    )
+        public
+        pure
+        returns (bool)
+    {
+        return true;
+    }
+
     function verifyCallData(
         bytes memory callData
     )
