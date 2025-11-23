@@ -94,40 +94,40 @@ contract FinalTest is Script {
         console.log("Trigger Wallet:", TRIGGER_WALLET);
 
         // 1. BASE Setup
-        vm.createSelectFork(vm.envString("BASE_RPC")); 
-        console.log("--- Switched to BASE ---");
+//        vm.createSelectFork(vm.envString("BASE_RPC"));
+//        console.log("--- Switched to BASE ---");
         
-        vm.startBroadcast(delegatorPk);
+  //      vm.startBroadcast(delegatorPk);
 
-        vm.signAndAttachDelegation(DELEGATION_IMPLEMENTATION_L2, delegatorPk);
-        IEIP7702DeleGator(DEPLOYER_DELEGATOR).setEmergencyTriggerWallet(COMPOSER_BASE);
-        IEIP7702DeleGator(DEPLOYER_DELEGATOR).setSecurityAddress(SECURITY_WALLET);
-        vm.stopBroadcast();
-        console.log("Base Setup Complete: Whitelisted Composer as Trigger, Set Security Addr");
+  //      vm.signAndAttachDelegation(DELEGATION_IMPLEMENTATION_L2, delegatorPk);
+   //     IEIP7702DeleGator(DEPLOYER_DELEGATOR).setEmergencyTriggerWallet(COMPOSER_BASE);
+   //     IEIP7702DeleGator(DEPLOYER_DELEGATOR).setSecurityAddress(SECURITY_WALLET);
+     //   vm.stopBroadcast();
+     //   console.log("Base Setup Complete: Whitelisted Composer as Trigger, Set Security Addr");
 
         // 2. ARBITRUM Setup
-        vm.createSelectFork(vm.envString("ARBITRUM_RPC"));
-        console.log("--- Switched to ARBITRUM ---");
+     //   vm.createSelectFork(vm.envString("ARBITRUM_RPC"));
+     //   console.log("--- Switched to ARBITRUM ---");
 
-        vm.startBroadcast(delegatorPk);
+  //      vm.startBroadcast(delegatorPk);
 
-        vm.signAndAttachDelegation(DELEGATION_IMPLEMENTATION_L2, delegatorPk);
-        IEIP7702DeleGator(DEPLOYER_DELEGATOR).setEmergencyTriggerWallet(COMPOSER_ARB);
-        IEIP7702DeleGator(DEPLOYER_DELEGATOR).setSecurityAddress(SECURITY_WALLET);
-        vm.stopBroadcast();
-        console.log("Arbitrum Setup Complete: Whitelisted Composer as Trigger, Set Security Addr");
+   //     vm.signAndAttachDelegation(DELEGATION_IMPLEMENTATION_L2, delegatorPk);
+   //     IEIP7702DeleGator(DEPLOYER_DELEGATOR).setEmergencyTriggerWallet(COMPOSER_ARB);
+   //     IEIP7702DeleGator(DEPLOYER_DELEGATOR).setSecurityAddress(SECURITY_WALLET);
+   //     vm.stopBroadcast();
+   //     console.log("Arbitrum Setup Complete: Whitelisted Composer as Trigger, Set Security Addr");
 
         // 3. ZIRCUIT Setup & Execution
         vm.createSelectFork(vm.envString("ZIRCUIT_RPC"));
         console.log("--- Switched to ZIRCUIT ---");
 
         // 3a. Zircuit Setup
-        vm.startBroadcast(delegatorPk);
+     //   vm.startBroadcast(delegatorPk);
 
-        vm.signAndAttachDelegation(DELEGATION_IMPLEMENTATION_ZIRCUIT, delegatorPk);
-        IEIP7702DeleGator(DEPLOYER_DELEGATOR).setEmergencyTriggerWallet(TRIGGER_WALLET);
-        IEIP7702DeleGator(DEPLOYER_DELEGATOR).setSecurityAddress(SECURITY_WALLET);
-        vm.stopBroadcast();
+     //   vm.signAndAttachDelegation(DELEGATION_IMPLEMENTATION_ZIRCUIT, delegatorPk);
+     //   IEIP7702DeleGator(DEPLOYER_DELEGATOR).setEmergencyTriggerWallet(TRIGGER_WALLET);
+     //   IEIP7702DeleGator(DEPLOYER_DELEGATOR).setSecurityAddress(SECURITY_WALLET);
+     //   vm.stopBroadcast();
         console.log("Zircuit Setup Complete: Whitelisted Trigger Wallet, Set Security Addr");
 
         // 3b. Quote & Execution Logic
@@ -149,7 +149,7 @@ contract FinalTest is Script {
         bytes memory executionCalldata = _buildExecutionCalldata(fee.nativeFee, params);
 
         // Broadcast & Execute
-        vm.signAndAttachDelegation(DELEGATION_IMPLEMENTATION_ZIRCUIT, delegatorPk); // Need to attach again for trigger execution? Yes if it's a new tx from trigger? 
+  //      vm.signAndAttachDelegation(DELEGATION_IMPLEMENTATION_ZIRCUIT, delegatorPk); // Need to attach again for trigger execution? Yes if it's a new tx from trigger?
         // Wait, if TriggerWallet calls Delegator, Delegator needs code. 
         // But TriggerWallet CANNOT sign delegation for Delegator.
         // Delegator (DEPLOYER_DELEGATOR) must sign.
@@ -162,7 +162,7 @@ contract FinalTest is Script {
         
         // BUT "vm.signAndAttachDelegation" uses "delegatorPk".
         // So we sign with Delegator key, and attach to Trigger tx.
-        vm.signAndAttachDelegation(DELEGATION_IMPLEMENTATION_ZIRCUIT, delegatorPk);
+//        vm.signAndAttachDelegation(DELEGATION_IMPLEMENTATION_ZIRCUIT, delegatorPk);
 
         vm.startBroadcast(triggerPk);
         
