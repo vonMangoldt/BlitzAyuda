@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useAccount, useConnect, useDisconnect, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi'
-import { parseEther } from 'viem'
+import { useAccount, useConnect, useDisconnect } from 'wagmi'
 
 export function SOSButton() {
   const { address, isConnected } = useAccount()
@@ -10,18 +9,9 @@ export function SOSButton() {
   const { disconnect } = useDisconnect()
   const [showModal, setShowModal] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
-
-  const { 
-    sendTransaction, 
-    data: hash,
-    isPending: isPendingTx,
-    error: txError 
-  } = useSendTransaction()
-
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = 
-    useWaitForTransactionReceipt({
-      hash,
-    })
+  const [txHash, setTxHash] = useState<string | null>(null)
+  const [logs, setLogs] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSOSClick = async () => {
     if (!isConnected) {
@@ -29,17 +19,30 @@ export function SOSButton() {
       return
     }
 
-    if (!address) return
-
     try {
       setIsProcessing(true)
-      // Self transfer of 0 ETH (just a transaction to trigger SOS)
-      await sendTransaction({
-        to: address,
-        value: parseEther('0'),
+      setError(null)
+      setLogs(null)
+      setTxHash(null)
+
+      const response = await fetch('/api/emergency', {
+        method: 'POST',
       })
-    } catch (error) {
-      console.error('SOS transaction failed:', error)
+
+      const data = await response.json()
+
+      if (data.success) {
+        setLogs(data.output)
+        if (data.txHash) {
+          setTxHash(data.txHash)
+        }
+      } else {
+        setError(data.error || 'Unknown error')
+        setLogs(data.stderr || data.output)
+      }
+    } catch (err: any) {
+      console.error('SOS API failed:', err)
+      setError(err.message)
     } finally {
       setIsProcessing(false)
     }
@@ -53,46 +56,58 @@ export function SOSButton() {
   return (
     <>
       <div className="flex flex-col items-center justify-center min-h-screen">
-        <button
-          onClick={handleSOSClick}
-          disabled={isPendingTx || isConfirming || isProcessing}
-          className="relative group"
-        >
-          {/* Glowing background effect */}
-          <div className="absolute inset-0 bg-[#00ff00] blur-xl opacity-50 group-hover:opacity-75 transition-opacity animate-pulse" />
-          
-          {/* Main button */}
-          <div className="relative bg-black border border-[#00ff00] px-40 py-20 transform transition-all duration-300 hover:scale-105 hover:shadow-[0_0_60px_#00ff00] group-hover:animate-[glitch_0.3s_infinite]">
-            <span className="text-8xl font-bold text-[#00ff00] tracking-wider font-mono relative group-hover:animate-[glitch-text_0.3s_infinite]">
-              <span className="absolute inset-0 text-[#00ff00] blur-sm opacity-50">SOS</span>
-              <span className="relative">SOS</span>
-            </span>
-            {/* Terminal-style corner brackets */}
-            <div className="absolute top-2 left-2 text-[#00ff00] font-mono text-sm opacity-60">&lt;</div>
-            <div className="absolute top-2 right-2 text-[#00ff00] font-mono text-sm opacity-60">&gt;</div>
-            <div className="absolute bottom-2 left-2 text-[#00ff00] font-mono text-sm opacity-60">&lt;</div>
-            <div className="absolute bottom-2 right-2 text-[#00ff00] font-mono text-sm opacity-60">&gt;</div>
-            {/* Scan line effect */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#00ff00]/5 to-transparent animate-pulse pointer-events-none" style={{ animationDuration: '2s' }} />
+        {/* Only show button if no txHash (not executed yet) */}
+        {!txHash && (
+          <button
+            onClick={handleSOSClick}
+            disabled={isProcessing}
+            className="relative group"
+          >
+            {/* Glowing background effect */}
+            <div className="absolute inset-0 bg-[#00ff00] blur-xl opacity-50 group-hover:opacity-75 transition-opacity animate-pulse" />
+
+            {/* Main button */}
+            <div className="relative bg-black border border-[#00ff00] px-40 py-20 transform transition-all duration-300 hover:scale-105 hover:shadow-[0_0_60px_#00ff00] group-hover:animate-[glitch_0.3s_infinite]">
+              <span className="text-8xl font-bold text-[#00ff00] tracking-wider font-mono relative group-hover:animate-[glitch-text_0.3s_infinite]">
+                <span className="absolute inset-0 text-[#00ff00] blur-sm opacity-50">SOS</span>
+                <span className="relative">SOS</span>
+              </span>
+              {/* Terminal-style corner brackets */}
+              <div className="absolute top-2 left-2 text-[#00ff00] font-mono text-sm opacity-60">&lt;</div>
+              <div className="absolute top-2 right-2 text-[#00ff00] font-mono text-sm opacity-60">&gt;</div>
+              <div className="absolute bottom-2 left-2 text-[#00ff00] font-mono text-sm opacity-60">&lt;</div>
+              <div className="absolute bottom-2 right-2 text-[#00ff00] font-mono text-sm opacity-60">&gt;</div>
+              {/* Scan line effect */}
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#00ff00]/5 to-transparent animate-pulse pointer-events-none" style={{ animationDuration: '2s' }} />
+            </div>
+
+          </button>
+        )}
+
+        {/* Status text */}
+        {isProcessing && (
+          <p className="mt-6 text-[#00ff00] text-lg font-mono animate-pulse">
+            Executing Emergency Protocol...
+          </p>
+        )}
+        {txHash && (
+          <div className="mt-6 text-center">
+            <p className="text-[#00ff00] text-lg font-mono">✓ SOS Executed!</p>
+            <a
+              href={`https://layerzeroscan.com/tx/${txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#00ff00] hover:underline block font-mono mt-2"
+            >
+              View on LayerZeroScan
+            </a>
           </div>
-          
-          {/* Status text */}
-          {(isPendingTx || isConfirming) && (
-            <p className="mt-6 text-[#00ff00] text-lg font-mono animate-pulse">
-              Processing...
-            </p>
-          )}
-          {isConfirmed && (
-            <p className="mt-6 text-[#00ff00] text-lg font-mono">
-              ✓ SOS Sent!
-            </p>
-          )}
-          {txError && (
-            <p className="mt-6 text-red-500 text-lg font-mono">
-              ✗ Error: {txError.message}
-            </p>
-          )}
-        </button>
+        )}
+        {error && (
+          <p className="mt-6 text-red-500 text-lg font-mono">
+            ✗ Error: {error}
+          </p>
+        )}
 
         {/* Wallet address display */}
         {isConnected && address && (
@@ -112,18 +127,18 @@ export function SOSButton() {
 
       {/* Wallet Connect Modal */}
       {showModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center"
           onClick={() => setShowModal(false)}
         >
-          <div 
+          <div
             className="bg-black border border-[#00ff00] p-8 max-w-md w-full mx-4 shadow-[0_0_40px_#00ff00]"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-2xl font-bold text-[#00ff00] font-mono mb-6 text-center">
               CONNECT WALLET
             </h2>
-            
+
             <div className="space-y-3">
               {connectors.map((connector) => (
                 <button
