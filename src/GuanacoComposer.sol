@@ -18,7 +18,7 @@ contract GuanacoComposer is ILayerZeroComposer {
     address public immutable OAPP;
     address public immutable ENDPOINT;
 
-    bytes32 private constant BATCH_MODE = bytes32(1 << 248);
+    bytes32 private constant BATCH_MODE = bytes32(uint256(1) << 248);
 
     /// @notice Emitted when a message is received
     event ComposeReceived(address sender, bytes32 guid);
