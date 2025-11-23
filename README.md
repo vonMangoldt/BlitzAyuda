@@ -1,66 +1,10 @@
-## Foundry
+# SOS NON SUS
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
-
-Foundry consists of:
-
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
-
-## Documentation
-
-https://book.getfoundry.sh/
-
-## Usage
-
-### Build
-
-```shell
-$ forge build
-```
-
-### Test
-
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+## Contract addresses
+- OApp
+    - Zircuit `0xd36ea10Cb394a13a0BF5a46aB88a37E0C95Af7Ac`
+    - Base `0x536271fB18C1D3CD4FCaf4F04fB0513a83961c1A`
+    - Arbitrum `0xF802DB56c7C430b564E2B22761b724588374037C`
+- Composer
+    - Base `0x77Fa754D756556b57422b62D3332654fcA32cf2f`
+    - Aribtrum `0x21a0c3A154C0a0B7c0E0f356196Bc83c205d9171`
