@@ -11,7 +11,6 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
  * @notice Contract for emergency exit developed for EthGlobal Buenos Aires 2025
  */
 contract GuanacoOApp is OApp, OAppOptionsType3 {
-    mapping(bytes32 guid => Origin origin) public origins;
     address public composer;
 
     /// @notice Message types that are used to identify the various OApp operations.
@@ -19,10 +18,10 @@ contract GuanacoOApp is OApp, OAppOptionsType3 {
     uint16 public constant SEND = 1;
 
     /// @notice Emitted when a message is sent to another chain (A -> B).
-    event MessageSent(string message, uint32 dstEid);
+    event MessageSent(uint32 dstEid);
 
     /// @notice Emitted when a message is received
-    event MessageReceived(uint32 srcEid, address sender, bytes32 guid);
+    event MessageReceived(uint32 srcEid, bytes32 guid);
 
     /// @dev Revert with this error when an invalid message type is used.
     error InvalidMsgType();
@@ -43,7 +42,7 @@ contract GuanacoOApp is OApp, OAppOptionsType3 {
      * @notice Returns the estimated messaging fee for a given message.
      * @param _dstEids Destination endpoint ID array where the message will be batch sent.
      * @param _msgType The type of message being sent.
-     * @param _messages The message contents, same ordre as _dstEids.
+     * @param _messages The payloads, same ordre as _dstEids.
      * @param _extraSendOptions Extra gas options for receiving the send call (A -> B) per chain, same ordre as _dstEids.
      * Will be summed with enforcedOptions, even if no enforcedOptions are set.
      * @param _payInLzToken Boolean flag indicating whether to pay in LZ token.
@@ -52,13 +51,14 @@ contract GuanacoOApp is OApp, OAppOptionsType3 {
     function quote(
         uint32[] memory _dstEids,
         uint16 _msgType,
-        string[] memory _messages,
+        bytes[] memory _messages,
         bytes[] calldata _extraSendOptions,
         bool _payInLzToken
     ) public view returns (MessagingFee memory totalFee) {
         for (uint i = 0; i < _dstEids.length; i++) {
             bytes memory options = combineOptions(_dstEids[i], _msgType, _extraSendOptions[i]);
-            bytes memory encodedMessage = abi.encode(_messages[i]);
+            // add message sender so we can later verify it
+            bytes memory encodedMessage = abi.encode(msg.sender, _messages[i]);
             MessagingFee memory fee = _quote(_dstEids[i], encodedMessage, options, _payInLzToken);
             totalFee.nativeFee += fee.nativeFee;
             totalFee.lzTokenFee += fee.lzTokenFee;
@@ -68,26 +68,21 @@ contract GuanacoOApp is OApp, OAppOptionsType3 {
     function send(
         uint32[] memory _dstEids,
         uint16 _msgType,
-        string[] memory _messages,
+        bytes[] memory _messages,
         bytes[] calldata _extraSendOptions
     ) external payable {
         if (_msgType != SEND) {
             revert InvalidMsgType();
         }
 
-        // Calculate the total messaging fee required.
-        MessagingFee memory totalFee = quote(_dstEids, _msgType, _messages, _extraSendOptions, false);
-        require(msg.value >= totalFee.nativeFee, "Insufficient fee provided");
-
-        uint256 totalNativeFeeUsed = 0;
         uint256 remainingValue = msg.value;
 
         for (uint i = 0; i < _dstEids.length; i++) {
-            bytes memory _encodedMessage = abi.encode(_messages[i]);
+            // add message sender so we can later verify it
+            bytes memory _encodedMessage = abi.encode(msg.sender, _messages[i]);
             bytes memory options = combineOptions(_dstEids[i], _msgType, _extraSendOptions[i]);
             MessagingFee memory fee = _quote(_dstEids[i], _encodedMessage, options, false);
-
-            totalNativeFeeUsed += fee.nativeFee;
+            
             remainingValue -= fee.nativeFee;
 
             // Ensure the current call has enough allocated fee from msg.value.
@@ -101,7 +96,7 @@ contract GuanacoOApp is OApp, OAppOptionsType3 {
                 payable(msg.sender)
             );
 
-            emit MessageSent(_messages[i], _dstEids[i]);
+            emit MessageSent(_dstEids[i]);
         }
     }
 
@@ -118,18 +113,8 @@ contract GuanacoOApp is OApp, OAppOptionsType3 {
         address, // Executor address as specified by the OApp.
         bytes calldata // Any extra data or options to trigger on receipt.
     ) internal override {
-        origins[_guid] = _origin;
         endpoint.sendCompose(composer, _guid, 0, message);
-        emit MessageReceived(_origin.srcEid, address(uint160(uint256(_origin.sender))), _guid);
-    }
-
-    /**
-     * @notice Returns the original sender of a message on source chain.
-     * @param _guid The globally unique identifier of the message.
-     * @return The original sender of the message.
-     */
-    function getOriginalSender(bytes32 _guid) external view returns (address) {
-        return address(uint160(uint256(origins[_guid].sender)));
+        emit MessageReceived(_origin.srcEid, _guid);
     }
 
     /**
