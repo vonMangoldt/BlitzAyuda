@@ -9,9 +9,9 @@ import {OptionsBuilder} from "@layerzerolabs/oapp-evm/contracts/oapp/libs/Option
 contract TestSendTx is Script {
     using OptionsBuilder for bytes;
 
-    address constant OAPP_ZIRCUIT = 0x9571dC4FfD70b392306e5EC036B607C39bD55e3e;
-    address constant OAPP_BASE = 0xf0D0b33a4e7b0d4FbFa2fCecEbF58b2BA8Aa1e94;
-    address constant OAPP_ARBITRUM = 0x4ff5fbEdC24cdeDEb3Caedb3063F0c1848ba631f;
+    address constant OAPP_ZIRCUIT = 0x1DE44115c80FCdCf74085e9f554075178881e2f2;
+    address constant OAPP_BASE = 0xd263123785EA544eDC363147a657DF613c430db4;
+    address constant OAPP_ARBITRUM = 0x084bE0E911FD350F42A036e44989f2748F176Eb9;
 
     address constant ENDPOINT_ZIRCUIT = 0x6F475642a6e85809B1c36Fa62763669b1b48DD5B;
     address constant ENDPOINT_ARB = 0x1a44076050125825900e736c501f859c50fE728c;
@@ -54,9 +54,13 @@ contract TestSendTx is Script {
         dstEids[0] = EID_BASE;
         dstEids[1] = EID_ARB;
 
-        string[] memory messages = new string[](2);
-        messages[0] = "0 Hello Base from Zircuit!";
-        messages[1] = "1 Hello Arbitrum from Zircuit!";
+        bytes[] memory messagesForQuoting = new bytes[](2);
+        messagesForQuoting[0] = abi.encode(msg.sender, "0 Hello Base from Zircuit!");
+        messagesForQuoting[1] = abi.encode(msg.sender, "1 Hello Arbitrum from Zircuit!");
+
+        bytes[] memory messages = new bytes[](2);
+        messages[0] = abi.encode("0 Hello Base from Zircuit!");
+        messages[1] = abi.encode("1 Hello Arbitrum from Zircuit!");
 
         bytes[] memory options = new bytes[](2);
         options[0] = OptionsBuilder.newOptions()
@@ -66,7 +70,7 @@ contract TestSendTx is Script {
             .addExecutorLzReceiveOption(GAS_LIMIT, 0)
             .addExecutorLzComposeOption(0, GAS_LIMIT, 0);
 
-        MessagingFee memory fee = hub.quote(dstEids, SEND, messages, options, false);
+        MessagingFee memory fee = hub.quote(dstEids, SEND, messagesForQuoting, options, false);
         console.log("Fee:", fee.nativeFee);
 
         vm.startBroadcast();
