@@ -7,20 +7,13 @@ import { OAppOptionsType3 } from "@layerzerolabs/oapp-evm/contracts/oapp/libs/OA
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @title BatchSend contract for demonstrating multiple outbound cross-chain calls using LayerZero.
- * @notice THIS IS AN EXAMPLE CONTRACT. DO NOT USE THIS CODE IN PRODUCTION.
- * @dev This contract showcases how to send multiple cross-chain calls with one source function call using LayerZero's OApp Standard.
+ * @title GuanacoHubOApp
+ * @notice Contract for emergency exit developed for EthGlobal Buenos Aires 2025
  */
 contract GuanacoHubOApp is OApp, OAppOptionsType3 {
-    /// @notice Last received message data.
-    string public data = "Nothing received yet";
-
     /// @notice Message types that are used to identify the various OApp operations.
     /// @dev These values are used in things like combineOptions() in OAppOptionsType3 (enforcedOptions).
     uint16 public constant SEND = 1;
-
-    /// @notice Emitted when a message is received from another chain.
-    event MessageReceived(string message, uint32 senderEid, bytes32 sender);
 
     /// @notice Emitted when a message is sent to another chain (A -> B).
     event MessageSent(string message, uint32 dstEid);
@@ -70,7 +63,7 @@ contract GuanacoHubOApp is OApp, OAppOptionsType3 {
         uint32[] memory _dstEids,
         uint16 _msgType,
         string[] memory _messages,
-        bytes calldata _extraSendOptions // gas settings for A -> B
+        bytes calldata _extraSendOptions
     ) external payable {
         if (_msgType != SEND) {
             revert InvalidMsgType();
@@ -104,24 +97,5 @@ contract GuanacoHubOApp is OApp, OAppOptionsType3 {
 
             emit MessageSent(_messages[i], _dstEids[i]);
         }
-    }
-
-    /**
-     * @notice Internal function to handle receiving messages from another chain.
-     * @dev Decodes and processes the received message based on its type.
-     * @param _origin Data about the origin of the received message.
-     * @param message The received message content.
-     */
-    function _lzReceive(
-        Origin calldata _origin,
-        bytes32 /*guid*/,
-        bytes calldata message,
-        address, // Executor address as specified by the OApp.
-        bytes calldata // Any extra data or options to trigger on receipt.
-    ) internal override {
-        string memory _data = abi.decode(message, (string));
-        data = _data;
-
-        emit MessageReceived(data, _origin.srcEid, _origin.sender);
     }
 }
