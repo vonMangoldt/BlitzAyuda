@@ -38,7 +38,7 @@ contract GuanacoHubOApp is OApp, OAppOptionsType3 {
      * @param _dstEids Destination endpoint ID array where the message will be batch sent.
      * @param _msgType The type of message being sent.
      * @param _messages The message contents, same ordre as _dstEids.
-     * @param _extraSendOptions Extra gas options for receiving the send call (A -> B).
+     * @param _extraSendOptions Extra gas options for receiving the send call (A -> B) per chain, same ordre as _dstEids.
      * Will be summed with enforcedOptions, even if no enforcedOptions are set.
      * @param _payInLzToken Boolean flag indicating whether to pay in LZ token.
      * @return totalFee The estimated messaging fee for sending to all pathways.
@@ -47,11 +47,11 @@ contract GuanacoHubOApp is OApp, OAppOptionsType3 {
         uint32[] memory _dstEids,
         uint16 _msgType,
         string[] memory _messages,
-        bytes calldata _extraSendOptions,
+        bytes[] calldata _extraSendOptions,
         bool _payInLzToken
     ) public view returns (MessagingFee memory totalFee) {
         for (uint i = 0; i < _dstEids.length; i++) {
-            bytes memory options = combineOptions(_dstEids[i], _msgType, _extraSendOptions);
+            bytes memory options = combineOptions(_dstEids[i], _msgType, _extraSendOptions[i]);
             bytes memory encodedMessage = abi.encode(_messages[i]);
             MessagingFee memory fee = _quote(_dstEids[i], encodedMessage, options, _payInLzToken);
             totalFee.nativeFee += fee.nativeFee;
@@ -63,7 +63,7 @@ contract GuanacoHubOApp is OApp, OAppOptionsType3 {
         uint32[] memory _dstEids,
         uint16 _msgType,
         string[] memory _messages,
-        bytes calldata _extraSendOptions
+        bytes[] calldata _extraSendOptions
     ) external payable {
         if (_msgType != SEND) {
             revert InvalidMsgType();
@@ -78,7 +78,7 @@ contract GuanacoHubOApp is OApp, OAppOptionsType3 {
 
         for (uint i = 0; i < _dstEids.length; i++) {
             bytes memory _encodedMessage = abi.encode(_messages[i]);
-            bytes memory options = combineOptions(_dstEids[i], _msgType, _extraSendOptions);
+            bytes memory options = combineOptions(_dstEids[i], _msgType, _extraSendOptions[i]);
             MessagingFee memory fee = _quote(_dstEids[i], _encodedMessage, options, false);
 
             totalNativeFeeUsed += fee.nativeFee;
