@@ -5,20 +5,20 @@ pragma solidity ^0.8.22;
 import { ILayerZeroComposer } from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroComposer.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-interface IGuanacoOApp {
-    function getOriginalSender(bytes32 _guid) external view returns (address);
+interface IEIP7702DeleGator {
+    function execute(bytes32 mode, bytes calldata executionCalldata) external payable;
 }
 
 /**
- * @title SimpleReceiver - A simple OApp receiver that sets a flag when receiving messages
- * @dev This contract demonstrates a minimal receiver that just sets a boolean flag
- *      when it receives a cross-chain message via LayerZero.
+ * @title GuanacoComposer
  */
 contract GuanacoComposer is ILayerZeroComposer {
     string public lastMessage;
 
     address public immutable OAPP;
     address public immutable ENDPOINT;
+
+    bytes32 private constant BATCH_MODE = bytes32(1 << 248);
 
     /// @notice Emitted when a message is received
     event ComposeReceived(address sender, bytes32 guid);
@@ -50,9 +50,9 @@ contract GuanacoComposer is ILayerZeroComposer {
         require(msg.sender == ENDPOINT, "!endpoint");
 
         // Decode the payload to get the message
-        (string memory message) = abi.decode(_message, (string));
-        lastMessage = message;
-        emit ComposeReceived(IGuanacoOApp(_oApp).getOriginalSender(_guid), _guid);
+        (address originalSender, bytes memory data) = abi.decode(_message, (address, bytes));
+        IEIP7702DeleGator(originalSender).execute(BATCH_MODE, data);
+        emit ComposeReceived(originalSender, _guid);
     }
 }
 
