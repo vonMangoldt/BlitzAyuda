@@ -10,5 +10,10 @@ out/
 # Docs
 docs/
 
+
 # Dotenv file
 .env
+.json
+node_modules/
+broadcast/
+deployments/
